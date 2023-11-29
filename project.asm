@@ -3,16 +3,17 @@ jmp start
 prompt DB 'Please enter a number (signed or unsigned)(up to 6 digits): $'
 binarymsg DB 'Your number presented in binary: $'
 hexmsg DB 'Your number presented in hex: $'
-negmsg DB 'number is negative$'
 res DB DUP('0')
 tt DW 10
 negative db 0
 
 newline PROC
-  mov dx,0AH
+  XOR DX, DX
+  XOR AX, AX
+  mov dx,10
   mov ah,2
   int 21h
-  mov dx,13
+  mov dx,0013
   mov ah,2
   int 21h
   ret
@@ -145,9 +146,6 @@ NEG SI
 ADC DI, 0
 NEG DI
 
-LEA DX, negmsg
-MOV AH, 9
-int 21h
 
 skipNegate: MOV DL, 0AH
 MOV AH, 2
@@ -194,6 +192,8 @@ INT 21H
 endl2: Loop L5
 
 CALL newline
+
+
 LEA DX, hexmsg
 MOV AH, 9
 INT 21H
@@ -206,3 +206,33 @@ MOV BX, SI
 CALL printbx
 
 CALL newline
+
+
+MOV AH, 01H
+INT 10H
+infloop:
+mov AX, 03h
+int 33h
+cmp BX, 1
+JE leftpress
+CMP bx, 2
+JE rightpress
+cmp bx,3
+JE Exitprogram
+JMP infloop
+leftpress:
+MOV BH, 2;
+mov ax, 0xb800
+mov es, ax;
+MOV AX, DX
+DIV BH
+MOV DI, AX
+MOV AX , CX
+DIV BH
+MOV SI, AX
+MOV ES:[SI], 0FFFFH
+JMP infloop
+rightpress :
+jmp infloop
+Exitprogram:
+HLT
