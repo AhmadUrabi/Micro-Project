@@ -1,4 +1,4 @@
-ORG 100H
+                             ORG 100H
 jmp start
 prompt DB 'Please enter a number (signed or unsigned)(up to 6 digits): $'
 binarymsg DB 'Your number presented in binary: $'
@@ -213,26 +213,73 @@ INT 10H
 infloop:
 mov AX, 03h
 int 33h
+cmp BX, 0
+JE infloop
 cmp BX, 1
 JE leftpress
 CMP bx, 2
 JE rightpress
 cmp bx,3
 JE Exitprogram
-JMP infloop
 leftpress:
-MOV BH, 2;
 mov ax, 0xb800
 mov es, ax;
-MOV AX, DX
-DIV BH
-MOV DI, AX
-MOV AX , CX
-DIV BH
+MOV AX, CX 
+MOV DI, 4
+PUSH DX
+XOR DX, DX
+DIV DI
+POP DX
 MOV SI, AX
-MOV ES:[SI], 0FFFFH
+
+MOV AX, DX
+MOV CX, 8
+XOR DX, DX
+DIV CX
+MOV DI, AX
+
+MOV CX, DI
+LLLI: ADD SI, 160
+LOOP LLLI
+
+ROR SI ,1
+JC addcarry
+ROL SI,1
+MOV ES:[SI+1], 1FH
+JMP infloop
+addcarry:
+ROL SI,1
+MOV ES:[SI], 1FH
 JMP infloop
 rightpress :
-jmp infloop
+mov ax, 0xb800
+mov es, ax;
+MOV AX, CX 
+MOV DI, 4
+PUSH DX
+XOR DX, DX
+DIV DI
+POP DX
+MOV SI, AX
+
+MOV AX, DX
+MOV CX, 8
+XOR DX, DX
+DIV CX
+MOV DI, AX
+
+MOV CX, DI
+LLLI2: ADD SI, 160
+LOOP LLLI2
+
+ROR SI ,1
+JC addcarry2
+ROL SI,1
+MOV ES:[SI+1], 5FH
+JMP infloop
+addcarry2:
+ROL SI,1
+MOV ES:[SI], 5FH
+JMP infloop
 Exitprogram:
 HLT
