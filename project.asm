@@ -3,6 +3,7 @@ jmp start
 prompt DB 'Please enter a number (signed or unsigned)(up to 6 digits): $'
 binarymsg DB 'Your number presented in binary: $'
 hexmsg DB 'Your number presented in hex: $'
+mousemsg DB 'Left press to turn background to blue, right press to turn to yellow, press both to halt program$'
 res DB DUP('0')
 tt DW 10
 negative db 0
@@ -208,6 +209,11 @@ MOV BX, SI
 CALL printbx
 
 CALL newline
+
+
+LEA DX, mousemsg
+MOV AH,9h
+int 21H
 
 
 MOV AH, 01H
