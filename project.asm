@@ -1,4 +1,4 @@
-                             ORG 100H
+ORG 100H
 jmp start
 prompt DB 'Please enter a number (signed or unsigned)(up to 6 digits): $'
 binarymsg DB 'Your number presented in binary: $'
@@ -7,7 +7,7 @@ res DB DUP('0')
 tt DW 10
 negative db 0
 
-newline PROC
+newline PROC ; Procedure to print a newline
   XOR DX, DX
   XOR AX, AX
   mov dx,10
@@ -35,7 +35,7 @@ hexlet PROC
     RET
 hexlet ENDP
 
-printbx PROC
+printbx PROC; Procedure to print BX in hex
     CLC
     PUSH BX
     SHR BH, 4
@@ -81,7 +81,7 @@ printbx PROC
     printhexskip4:
     POP BX
     ret
- printbx ENDP
+printbx ENDP
 
 start:
 LEA DX, prompt
@@ -90,26 +90,27 @@ int 21H
 
 LEA DI, res
 
-MOV CX, 6
-L1:
+MOV CX, 6; Get Character Input
+char_in_loop:
 MOV AH, 1;
 int 21h
 CMP AL, 13
-JE return
+JE return_button
 CMP AL, 45
 JE store
 SUB AL, 30H
 store: STOSB
-end: LOOP L1
+LOOP char_in_loop
 
 
-return: MOV DI, 6
+return_button:
+MOV DI, 6
 SUB DI, CX
 MOV CX , DI
 LEA BX, res
-CMP [BX], 45
+CMP [BX], 45; Check if negative
 JNE nonneg
-inc BX
+inc BX; Skip first character (-)
 DEC CX
 
 
@@ -118,32 +119,33 @@ XOR DI, DI
 XOR SI, SI
 
 
-L2:
+; Calculate number from characters
+outer_char_loop:
 PUSH CX
 MOV AL, [BX]
 XOR AH, AH
 XOR DX, DX
-L3:
+inner_char_loop:
 CMP CX,1
 JE exit
 PUSH BX
 MOV BX, 10
 MUL BX
 POP BX
-Loop L3;
+Loop inner_char_loop
 exit:
 POP CX
 ADD SI, AX
 ADC DI, DX
 INC BX
-LOOP L2
+LOOP outer_char_loop
 
 
 LEA BX, res
 CMP [BX], 45
 JNE skipNegate
 NEG SI
-ADC DI, 0
+ADC DI, 0; To properly negate the full 32-bit value
 NEG DI
 
 
@@ -158,13 +160,13 @@ INT 21H
 
 
 
-CMP DI, 0FFH
+CMP DI, 0FFFFH ; Dont print DI if it's 0 or FF
 JE skipDI
 CMP DI, 0
 JE skipDI
 
 MOV CX, 16
-L4:
+print_di_loop:
 ROL DI,1
 JC print1
 MOV DL, 30H
@@ -175,21 +177,21 @@ print1:
 MOV DL, 31H
 MOV AH,2
 INT 21H
-endl1: Loop L4
+endl1: Loop print_di_loop
 
 skipDI: MOV CX, 16
-L5:
+print_si_loop:
 ROL SI,1
-JC print1n
+JC print2
 MOV DL, 30H
 MOV AH, 2
 INT 21H
 JMP endl2
-print1n:
+print2:
 MOV DL, 31H
 MOV AH,2
 INT 21H
-endl2: Loop L5
+endl2: Loop print_si_loop
 
 CALL newline
 
@@ -217,7 +219,7 @@ cmp BX, 0
 JE infloop
 cmp BX, 1
 JE leftpress
-CMP bx, 2
+CMP BL, 02H
 JE rightpress
 cmp bx,3
 JE Exitprogram
@@ -251,7 +253,7 @@ addcarry:
 ROL SI,1
 MOV ES:[SI], 1FH
 JMP infloop
-rightpress :
+rightpress:
 mov ax, 0xb800
 mov es, ax;
 MOV AX, CX 
@@ -275,11 +277,11 @@ LOOP LLLI2
 ROR SI ,1
 JC addcarry2
 ROL SI,1
-MOV ES:[SI+1], 5FH
+MOV ES:[SI+1], 6FH
 JMP infloop
 addcarry2:
 ROL SI,1
-MOV ES:[SI], 5FH
+MOV ES:[SI], 6FH
 JMP infloop
 Exitprogram:
 HLT
